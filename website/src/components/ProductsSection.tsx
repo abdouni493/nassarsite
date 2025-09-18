@@ -24,7 +24,7 @@ interface CategoryProduct {
   image: string;
 }
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const ProductsSection: React.FC<ProductsSectionProps> = ({ category, onBack }) => {
   const { t, language } = useLanguage();
@@ -40,9 +40,10 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({ category, onBack }) =
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const url = category
-        ? `${API_BASE}/api/categories/${category}/products`
-        : `${API_BASE}/api/products`;
+     const url = category
+  ? `${API_BASE}/categories/${category}/products`
+  : `${API_BASE}/products`;
+
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
@@ -131,15 +132,17 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({ category, onBack }) =
               >
                 {/* Product Image */}
                 <div className="relative h-48 bg-muted overflow-hidden">
-                  <img
-                    src={
-                      product.image
-                        ? `${API_BASE}${product.image}` // ✅ prepend API_BASE
-                        : "/placeholder.svg"
-                    }
-                    alt={language === "ar" ? product.nameAr : product.nameFr}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
+                 <img
+  src={
+    product.image
+      ? product.image.startsWith("http")
+        ? product.image
+        : `${API_BASE}${product.image}`
+      : "/placeholder.svg"
+  }
+  alt={language === "ar" ? product.nameAr : product.nameFr}
+/>
+
 
                   <Badge
                     className={`absolute bottom-2 left-2 ${

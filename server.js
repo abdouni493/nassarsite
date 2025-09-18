@@ -2674,15 +2674,6 @@ app.delete('/api/orders/:id', async (req, res) => {
 // Serve React build folder
 app.use(express.static(path.join(__dirname, 'website', 'dist')));
 
-// Serve React index.html for any unknown route
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'website', 'dist', 'index.html'));
-});
-
-// Catch-all route to send React index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'website', 'build', 'index.html'));
-});
 
 // Serve built React (Vite -> dist)
 const clientBuildPath = path.join(__dirname, 'website', 'dist'); // Vite produces 'dist'

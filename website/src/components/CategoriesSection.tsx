@@ -16,6 +16,9 @@ interface Category {
   description_ar?: string;
 }
 
+// ✅ Use environment variable for backend URL
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+
 const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => {
   const { t, language } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -23,7 +26,7 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => 
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/categories"); // ✅ same pattern as HeroSection
+      const res = await fetch(`${API_BASE}/categories`);
       if (!res.ok) throw new Error("Failed to fetch categories");
       const data: Category[] = await res.json();
       setCategories(data);
@@ -73,6 +76,9 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => 
                 ? category.description_fr || "Description non fournie"
                 : category.description_ar || "لا يوجد وصف";
 
+            // ✅ Fix: use API_BASE instead of localhost
+            const imageUrl = category.image ? `${API_BASE}${category.image}` : "/placeholder.svg";
+
             return (
               <div
                 key={category.id}
@@ -83,7 +89,7 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => 
                 {/* Category Image */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={category.image ? `http://localhost:5000${category.image}` : "/placeholder.svg"}
+                    src={imageUrl}
                     alt={categoryName}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />

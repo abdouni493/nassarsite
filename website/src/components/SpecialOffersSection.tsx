@@ -19,7 +19,7 @@ interface OfferProduct extends Omit<Product, 'descriptionFr' | 'descriptionAr' |
   image?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE || '/api';
 
 const SpecialOffersSection: React.FC<SpecialOffersSectionProps> = ({ onNavigate }) => {
   const { t, language } = useLanguage();
@@ -48,7 +48,7 @@ const SpecialOffersSection: React.FC<SpecialOffersSectionProps> = ({ onNavigate 
  // In SpecialOffersSection.tsx, modify the fetchActiveOffers function:
 const fetchActiveOffers = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/special-offers`);
+    const response = await fetch(`${API_BASE_URL}/special-offers`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -76,7 +76,7 @@ const fetchActiveOffers = async () => {
 
   const fetchOfferProducts = async (offerId: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/special-offers/${offerId}/products`);
+      const response = await fetch(`${API_BASE_URL}/special-offers/${offerId}/products`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -221,7 +221,7 @@ const fetchActiveOffers = async () => {
                 {/* Product Image */}
                 <div className="relative h-56 bg-muted overflow-hidden">
                   <img
-                    src={product.image ? `${API_BASE_URL}${product.image}` : "/placeholder.svg"}
+                    src={product.image ? `${API_BASE_URL}/${product.image}` : "/placeholder.svg"}
                     alt={language === 'ar' ? product.nameAr || product.name : product.nameFr || product.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {

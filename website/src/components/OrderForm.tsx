@@ -30,7 +30,7 @@ interface OrderFormData {
   paymentMethod: 'cod' | 'dahabia';
 }
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
   const { t, language } = useLanguage();
@@ -59,7 +59,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
       total: price * quantity,
       nameAr: item.nameAr,
       nameFr: item.nameFr,
-      imageUrl: item.image ? `${API_BASE}${item.image}` : '/placeholder.svg',
+      imageUrl: item.image
+  ? item.image.startsWith('http')
+    ? item.image
+    : `${API_BASE}${item.image}`
+  : '/placeholder.svg',
     };
   });
 
@@ -98,7 +102,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
         total: computedTotalPrice,
       };
 
-      const response = await axios.post(`${API_BASE}/api/orders`, orderDataToSend);
+      const response = await axios.post(`${API_BASE}/orders`, orderDataToSend);
 
       if (response.status === 201) {
         const createdOrder = response.data;

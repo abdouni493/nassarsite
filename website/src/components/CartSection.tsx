@@ -8,7 +8,7 @@ interface CartSectionProps {
   onNavigate: (section: string) => void;
 }
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const CartSection: React.FC<CartSectionProps> = ({ onNavigate }) => {
   const { t, language } = useLanguage();
@@ -58,8 +58,9 @@ const CartSection: React.FC<CartSectionProps> = ({ onNavigate }) => {
                 const price = item.price ?? item.selling_price ?? 0;
                 const total = price * (item.quantity ?? 1);
                 const imageUrl = item.image
-                  ? `${API_BASE}${item.image}`
-                  : "/placeholder.svg";
+  ? `${API_BASE}${item.image}`
+  : "/placeholder.svg";
+
 
                 return (
                   <div key={item.id} className="card-elevated p-4 fade-in">
