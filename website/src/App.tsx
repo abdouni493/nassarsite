@@ -10,6 +10,8 @@ import NotFound from "./pages/NotFound";
 import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
+// Use environment variable for backend
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
