@@ -1,51 +1,72 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Phone, MessageCircle, Mail, MapPin, Clock, Star } from 'lucide-react';
+import { Phone, MessageCircle, Mail, MapPin, Clock, Facebook, Instagram, Music } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+
+interface Contact {
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  viber?: string;
+  mapUrl?: string;
+}
 
 interface ContactSectionProps {
   onNavigate: (section: string) => void;
 }
 
+const API_BASE = 'http://localhost:5000';
+
 const ContactSection: React.FC<ContactSectionProps> = ({ onNavigate }) => {
   const { t } = useLanguage();
-
-  const contactMethods = [
-    {
-      icon: Phone,
-      title: 'الهاتف',
-      titleFr: 'Téléphone',
-      value: '0555 123 456',
-      description: 'متاح من السبت إلى الخميس',
-      descriptionFr: 'Disponible du samedi au jeudi',
-      action: 'tel:0555123456',
-      color: 'text-green-600'
-    },
-    {
-      icon: MessageCircle,
-      title: 'واتساب',
-      titleFr: 'WhatsApp',
-      value: '0666 789 012',
-      description: 'متاح 24/7 للرد السريع',
-      descriptionFr: 'Disponible 24/7 pour réponse rapide',
-      action: 'https://wa.me/213666789012',
-      color: 'text-green-500'
-    },
-    {
-      icon: Mail,
-      title: 'البريد الإلكتروني',
-      titleFr: 'Email',
-      value: 'info@nasser-equipments.dz',
-      description: 'للاستفسارات التفصيلية',
-      descriptionFr: 'Pour demandes détaillées',
-      action: 'mailto:info@nasser-equipments.dz',
-      color: 'text-blue-600'
-    }
-  ];
+  const [contact, setContact] = useState<Contact>({} as Contact);
+  const [isLoading, setIsLoading] = useState(true);
 
   const workingHours = [
     { day: 'السبت - الخميس', dayFr: 'Samedi - Jeudi', hours: '08:00 - 18:00' },
-    { day: 'الجمعة', dayFr: 'Vendredi', hours: 'مغلق' }
+    { day: 'الجمعة', dayFr: 'Vendredi', hours: 'مغلق' },
+  ];
+
+  useEffect(() => {
+    const fetchContact = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/contacts`);
+        const data: Contact = await res.json();
+        setContact(data || {});
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de récupérer les informations de contact.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchContact();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const contactMethods = [
+    { icon: Phone, title: 'الهاتف', value: contact.phone, action: contact.phone ? `tel:${contact.phone.replace(/\s+/g, '')}` : '#', color: 'text-green-600' },
+    { icon: MessageCircle, title: 'واتساب', value: contact.whatsapp, action: contact.whatsapp ? `https://wa.me/${contact.whatsapp.replace(/\D/g, '')}` : '#', color: 'text-green-500' },
+    { icon: Mail, title: 'البريد الإلكتروني', value: contact.email, action: contact.email ? `mailto:${contact.email}` : '#', color: 'text-blue-600' },
+    { icon: Facebook, title: 'فيسبوك', value: contact.facebook, action: contact.facebook || '#', color: 'text-blue-700' },
+    { icon: Instagram, title: 'انستغرام', value: contact.instagram, action: contact.instagram || '#', color: 'text-pink-600' },
+    { icon: Music, title: 'تيك توك', value: contact.tiktok, action: contact.tiktok || '#', color: 'text-black' },
+    { icon: MessageCircle, title: 'فايبر', value: contact.viber, action: contact.viber ? `viber://chat?number=${contact.viber.replace(/\D/g, '')}` : '#', color: 'text-purple-600' },
   ];
 
   return (
@@ -53,9 +74,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16 fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-            {t('contact')}
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">{t('contact')}</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             نحن هنا لمساعدتك في العثور على المنتجات المناسبة وتقديم أفضل خدمة لك
           </p>
@@ -63,34 +82,29 @@ const ContactSection: React.FC<ContactSectionProps> = ({ onNavigate }) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Methods */}
+          {/* Contact Methods & Working Hours */}
           <div className="space-y-8 slide-in-left">
             <div className="card-elevated p-8">
               <h3 className="text-2xl font-bold mb-6">طرق التواصل</h3>
-              
               <div className="space-y-6">
-                {contactMethods.map((method, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start space-x-4 p-4 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
-                    onClick={() => window.open(method.action, '_blank')}
-                  >
-                    <div className={`p-3 rounded-full bg-background shadow-sm ${method.color}`}>
-                      <method.icon className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-foreground mb-1">
-                        {method.title}
-                      </h4>
-                      <p className="text-lg font-medium text-primary mb-2">
-                        {method.value}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {method.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                {contactMethods.map(
+                  (method, index) =>
+                    method.value && (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-4 p-4 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
+                        onClick={() => window.open(method.action, '_blank')}
+                      >
+                        <div className={`p-3 rounded-full bg-background shadow-sm ${method.color}`}>
+                          <method.icon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground mb-1">{method.title}</h4>
+                          <p className="text-lg font-medium text-primary mb-2">{method.value}</p>
+                        </div>
+                      </div>
+                    )
+                )}
               </div>
             </div>
 
@@ -113,75 +127,49 @@ const ContactSection: React.FC<ContactSectionProps> = ({ onNavigate }) => {
 
           {/* About & Location */}
           <div className="space-y-8 slide-in-right">
-            {/* About Store */}
             <div className="card-elevated p-8">
               <h3 className="text-2xl font-bold mb-6">{t('aboutTitle')}</h3>
-              <div className="space-y-4 text-muted-foreground">
-                <p>
-                  {t('aboutText')}
-                </p>
-                <p>
-                  نتميز بتوفير مجموعة واسعة من قطع الغيار والمعدات لجميع القطاعات:
-                </p>
-                <ul className="list-disc list-inside space-y-2 mr-4">
-                  <li>قطع غيار السيارات والشاحنات</li>
-                  <li>المعدات الصناعية والهيدروليكية</li>
-                  <li>الأدوات اليدوية والكهربائية</li>
-                  <li>المكونات الإلكترونية والكهربائية</li>
-                </ul>
-              </div>
-
-              {/* Customer Reviews */}
-              <div className="mt-8 pt-6 border-t">
-                <h4 className="font-semibold mb-4">آراء العملاء</h4>
-                <div className="space-y-4">
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <div className="flex space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground mr-2">- أحمد م.</span>
-                    </div>
-                    <p className="text-sm">"خدمة ممتازة ومنتجات عالية الجودة. أنصح بالتعامل معهم."</p>
-                  </div>
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <div className="flex space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground mr-2">- فاطمة ل.</span>
-                    </div>
-                    <p className="text-sm">"سرعة في التوصيل وأسعار منافسة. متجر موثوق."</p>
-                  </div>
-                </div>
-              </div>
+              <p className="text-muted-foreground">
+                نحن نتميز بتوفير مجموعة واسعة من قطع الغيار والمعدات لجميع القطاعات: السيارات، المعدات الصناعية، الأدوات اليدوية والكهربائية، والمكونات الإلكترونية.
+              </p>
             </div>
 
-            {/* Location */}
             <div className="card-elevated p-8">
               <h3 className="text-xl font-bold mb-6 flex items-center">
                 <MapPin className="h-5 w-5 mr-2 text-primary" />
                 موقعنا
               </h3>
-              <div className="space-y-4">
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="font-medium mb-2">العنوان</p>
-                  <p className="text-muted-foreground">
-                    شارع الاستقلال، حي الصناعة<br />
-                    الجزائر العاصمة، الجزائر
-                  </p>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="font-medium mb-2">التغطية</p>
-                  <p className="text-muted-foreground">
-                    نقوم بالتوصيل لجميع أنحاء الجزائر
-                  </p>
-                </div>
-              </div>
+              {contact.mapUrl ? (
+                <iframe
+                  src={contact.mapUrl}
+                  className="w-full h-64 rounded-lg border-0"
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              ) : (
+                <p className="text-muted-foreground">لم يتم توفير رابط الموقع بعد.</p>
+              )}
+            </div>
+
+            {/* Social Links Preview */}
+            <div className="flex flex-wrap gap-4">
+              {['facebook', 'instagram', 'tiktok'].map((platform) =>
+                contact[platform as keyof Contact] ? (
+                  <a
+                    key={platform}
+                    href={contact[platform as keyof Contact]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors duration-200"
+                  >
+                    {platform === 'facebook' && <Facebook size={20} className="text-blue-600" />}
+                    {platform === 'instagram' && <Instagram size={20} className="text-pink-600" />}
+                    {platform === 'tiktok' && <Music size={20} className="text-black" />}
+                    <span className="text-sm font-medium capitalize">{platform}</span>
+                  </a>
+                ) : null
+              )}
             </div>
           </div>
         </div>
@@ -189,22 +177,22 @@ const ContactSection: React.FC<ContactSectionProps> = ({ onNavigate }) => {
         {/* Call to Action */}
         <div className="mt-16 text-center fade-in">
           <div className="bg-gradient-to-r from-primary to-primary-hover rounded-2xl p-8 text-white">
-            <h3 className="text-2xl font-bold mb-4">
-              جاهزون لخدمتك
-            </h3>
+            <h3 className="text-2xl font-bold mb-4">جاهزون لخدمتك</h3>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
               تواصل معنا الآن للحصول على استشارة مجانية أو طلب عرض سعر خاص لمشروعك
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                variant="accent"
-                size="lg"
-                onClick={() => window.open('tel:0555123456')}
-                className="px-8 py-3"
-              >
-                <Phone className="h-5 w-5 mr-2" />
-                اتصل بنا الآن
-              </Button>
+              {contact.phone && (
+                <Button
+                  variant="accent"
+                  size="lg"
+                  onClick={() => window.open(`tel:${contact.phone.replace(/\s+/g, '')}`)}
+                  className="px-8 py-3"
+                >
+                  <Phone className="h-5 w-5 mr-2" />
+                  اتصل بنا الآن
+                </Button>
+              )}
               <Button
                 variant="hero"
                 size="lg"

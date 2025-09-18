@@ -54,12 +54,7 @@ const Index = () => {
       case 'order':
         return <OrderForm onOrderSubmit={handleOrderSubmit} />;
       case 'thank-you':
-        return (
-          <ThankYouPage
-            orderData={orderData}
-            onNavigate={handleNavigate}
-          />
-        );
+        return <ThankYouPage orderData={orderData} />; // ✅ removed onNavigate
       case 'contact':
         return <ContactSection onNavigate={handleNavigate} />;
       default:

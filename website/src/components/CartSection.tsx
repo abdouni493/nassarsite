@@ -8,6 +8,8 @@ interface CartSectionProps {
   onNavigate: (section: string) => void;
 }
 
+const API_BASE = "http://localhost:5000";
+
 const CartSection: React.FC<CartSectionProps> = ({ onNavigate }) => {
   const { t, language } = useLanguage();
   const { items, updateQuantity, removeFromCart, totalPrice, totalItems } = useCart();
@@ -52,78 +54,86 @@ const CartSection: React.FC<CartSectionProps> = ({ onNavigate }) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="card-elevated p-4 fade-in">
-                  <div className="flex items-center space-x-4">
-                    {/* Product Image */}
-                    <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={item.image}
-                        alt={language === 'ar' ? item.nameAr : item.nameFr}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+              {items.map((item) => {
+                const price = item.price ?? item.selling_price ?? 0;
+                const total = price * (item.quantity ?? 1);
+                const imageUrl = item.image
+                  ? `${API_BASE}${item.image}`
+                  : "/placeholder.svg";
 
-                    {/* Product Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">
-                        {language === 'ar' ? item.nameAr : item.nameFr}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {language === 'ar' ? item.descriptionAr : item.descriptionFr}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className="text-lg font-bold text-primary">
-                          {item.price.toLocaleString()} دج
-                        </span>
-                        {item.isSpecialOffer && (
-                          <span className="text-sm text-muted-foreground line-through">
-                            {item.originalPrice?.toLocaleString()} دج
+                return (
+                  <div key={item.id} className="card-elevated p-4 fade-in">
+                    <div className="flex items-center space-x-4">
+                      {/* Product Image */}
+                      <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={imageUrl}
+                          alt={language === 'ar' ? item.nameAr : item.nameFr}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {language === 'ar' ? item.nameAr : item.nameFr}
+                        </h3>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {language === 'ar' ? item.descriptionAr : item.descriptionFr}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <span className="text-lg font-bold text-primary">
+                            {price.toLocaleString()} دج
                           </span>
-                        )}
+                          {item.isSpecialOffer && item.originalPrice && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              {item.originalPrice.toLocaleString()} دج
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="h-8 w-8"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="h-8 w-8"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+
+                      {/* Item Total */}
+                      <div className="text-right">
+                        <p className="font-bold text-lg">
+                          {total.toLocaleString()} دج
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Quantity Controls */}
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="h-8 w-8"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="h-8 w-8"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-
-                    {/* Item Total */}
-                    <div className="text-right">
-                      <p className="font-bold text-lg">
-                        {(item.price * item.quantity).toLocaleString()} دج
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Order Summary */}
@@ -138,7 +148,14 @@ const CartSection: React.FC<CartSectionProps> = ({ onNavigate }) => {
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-3">
                     <span>{t('total')}:</span>
-                    <span className="text-primary">{totalPrice.toLocaleString()} دج</span>
+                    <span className="text-primary">
+  {items.reduce((sum, item) => {
+    const price = Number(item.price ?? item.selling_price ?? 0);
+    const qty = Number(item.quantity ?? 1);
+    return sum + price * qty;
+  }, 0).toLocaleString()} دج
+</span>
+
                   </div>
                 </div>
 

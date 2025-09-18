@@ -45,6 +45,16 @@ type Product = {
   supplierName?: string;   // new field from JOIN
 };
 
+const allCategories: Record<string, { fr: string; ar: string }> = {
+  industrial_equipment: { fr: "Équipement industriel", ar: "معدات صناعية" },
+  construction_materials: { fr: "Matériaux de construction", ar: "مواد البناء" },
+  electrical_equipment: { fr: "Équipement électrique", ar: "معدات كهربائية" },
+  mechanical_parts: { fr: "Pièces mécaniques", ar: "قطع ميكانيكية" },
+  lab_office_equipment: { fr: "Équipement bureau/labo", ar: "معدات المكتب/المختبر" },
+  vehicles_transport: { fr: "Véhicules et transport", ar: "مركبات ونقل" },
+  safety_ppe: { fr: "Sécurité & EPI", ar: "معدات الحماية الشخصية" },
+};
+
 const API = "http://localhost:5000/api/products";
 
 export default function Inventory() {
@@ -91,27 +101,35 @@ export default function Inventory() {
     }
   }
 
-  async function addProduct() {
-    try {
-      const r = await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(addForm),
-      });
-      if (!r.ok) throw new Error("Add failed");
-      setAddOpen(false);
-      setAddForm({ name: "", barcode: "", brand: "", category: "" });
-      toast({ title: language === 'ar' ? '✅ تم إضافة المنتج' : "✅ Produit ajouté" });
-      await load();
-    } catch (e) {
-      console.error(e);
-      toast({
-        title: language === 'ar' ? 'خطأ' : 'Erreur',
-        description: language === 'ar' ? 'الاضافة غير ممكنة' : 'Ajout impossible',
-        variant: "destructive"
-      });
-    }
+ async function addProduct() {
+  try {
+    // Auto-generate barcode if empty
+    const productData = {
+      ...addForm,
+      barcode: addForm.barcode || `P${Date.now()}`, // e.g., P1695032123456
+    };
+
+    const r = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productData),
+    });
+
+    if (!r.ok) throw new Error("Add failed");
+    setAddOpen(false);
+    setAddForm({ name: "", barcode: "", brand: "", category: "" });
+    toast({ title: language === 'ar' ? '✅ تم إضافة المنتج' : "✅ Produit ajouté" });
+    await load();
+  } catch (e) {
+    console.error(e);
+    toast({
+      title: language === 'ar' ? 'خطأ' : 'Erreur',
+      description: language === 'ar' ? 'الاضافة غير ممكنة' : 'Ajout impossible',
+      variant: "destructive"
+    });
   }
+}
+
 
   async function updateProduct() {
     if (!editForm) return;
@@ -235,12 +253,15 @@ export default function Inventory() {
                   <SelectTrigger>
                     <SelectValue placeholder={language === 'ar' ? 'اختر فئة' : "Sélectionner"} />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Moteur">{language === 'ar' ? 'محرك' : "Moteur"}</SelectItem>
-                    <SelectItem value="Freins">{language === 'ar' ? 'فرامل' : "Freins"}</SelectItem>
-                    <SelectItem value="Suspension">{language === 'ar' ? 'نظام التعليق' : "Suspension"}</SelectItem>
-                    <SelectItem value="Électrique">{language === 'ar' ? 'كهرباء' : "Électrique"}</SelectItem>
-                  </SelectContent>
+                <SelectContent>
+  {Object.entries(allCategories).map(([key, val]) => (
+    <SelectItem key={key} value={key}>
+      {language === 'ar' ? val.ar : val.fr}
+    </SelectItem>
+  ))}
+</SelectContent>
+
+
                 </Select>
               </div>
               <Button onClick={addProduct} className="w-full gradient-primary text-white">

@@ -8,9 +8,8 @@ import multer from "multer";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
-
 app.use(cors({
-  origin: 'http://localhost:8080', // Change to match Vite port
+  origin: ["http://localhost:8080", "http://localhost:8081"],
   credentials: true
 }));
 
@@ -61,6 +60,40 @@ async function ensureColumn(table, name, ddl, fallbackValue = null) {
 async function initDb() {
   try {
 
+
+
+   // Orders table
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_name TEXT NOT NULL,
+      client_email TEXT,
+      client_phone TEXT,
+      wilaya TEXT,
+      address TEXT,
+      notes TEXT,
+      payment_method TEXT DEFAULT 'cod',
+      total REAL DEFAULT 0,
+      status TEXT DEFAULT 'pending',
+      payment_status TEXT DEFAULT 'unpaid',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Order items table
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER,
+      product_id INTEGER,
+      product_name TEXT,
+      quantity INTEGER DEFAULT 1,
+      price REAL DEFAULT 0,
+      total REAL DEFAULT 0,
+      FOREIGN KEY(order_id) REFERENCES orders(id)
+    );
+  `);
 
     // Website settings table
 await db.exec(`
@@ -2504,6 +2537,133 @@ app.put("/api/settings", upload.fields([{ name: "logo" }, { name: "favicon" }]),
 });
 
 
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await db.all(`
+      SELECT * FROM orders ORDER BY created_at DESC
+    `);
+
+    // Include order items for each order
+    for (let order of orders) {
+      order.items = await db.all(`SELECT * FROM order_items WHERE order_id = ?`, [order.id]);
+    }
+
+    res.json(orders);
+  } catch (err) {
+    console.error('❌ Fetch orders error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create a new order
+app.post('/api/orders', async (req, res) => {
+  const { client_name, client_email, client_phone, wilaya, address, notes, payment_method, items } = req.body;
+
+  if (!client_name || !items || !items.length || !address || !wilaya) {
+    return res.status(400).json({ message: 'Client name, wilaya, address, and items are required' });
+  }
+
+  try {
+    // 1️⃣ Compute total
+const total = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    // 2️⃣ Insert order
+    const result = await db.run(
+      `INSERT INTO orders 
+        (client_name, client_email, client_phone, wilaya, address, notes, payment_method, total, status, payment_status, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?)`,
+      [
+        client_name,
+        client_email || null,
+        client_phone || null,
+        wilaya,
+        address,
+        notes || null,
+        payment_method || 'cod',
+        total,
+        new Date().toISOString(),
+        new Date().toISOString()
+      ]
+    );
+
+    const orderId = result.lastID;
+
+    // 3️⃣ Insert order items
+    const stmt = await db.prepare(`
+      INSERT INTO order_items (order_id, product_id, product_name, quantity, price, total)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    for (let item of items) {
+      await stmt.run(orderId, item.product_id, item.product_name, item.quantity, item.price, item.total);
+    }
+
+    await stmt.finalize();
+
+    // 4️⃣ Return the newly created order with items
+    const newOrder = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    newOrder.items = await db.all('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
+
+    res.status(201).json(newOrder);
+  } catch (err) {
+    console.error('❌ Create order error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+app.put('/api/orders/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status) return res.status(400).json({ message: 'Status is required' });
+
+  try {
+    await db.run(
+      'UPDATE orders SET status = ?, updated_at = ? WHERE id = ?',
+      [status, new Date().toISOString(), id]
+    );
+
+    // If status is completed, update product quantities
+    if (status === 'completed') {
+      const orderItems = await db.all('SELECT * FROM order_items WHERE order_id = ?', [id]);
+      
+      for (const item of orderItems) {
+        // Get current product quantity
+        const product = await db.get('SELECT * FROM products WHERE id = ?', [item.product_id]);
+        
+        if (product) {
+          const newQuantity = Math.max(0, (product.current_quantity || 0) - item.quantity);
+          
+          await db.run(
+            'UPDATE products SET current_quantity = ?, updated_at = ? WHERE id = ?',
+            [newQuantity, new Date().toISOString(), item.product_id]
+          );
+        }
+      }
+    }
+
+    const updatedOrder = await db.get('SELECT * FROM orders WHERE id = ?', [id]);
+    updatedOrder.items = await db.all('SELECT * FROM order_items WHERE order_id = ?', [id]);
+
+    res.json(updatedOrder);
+  } catch (err) {
+    console.error('❌ Update order status error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete order
+app.delete('/api/orders/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Delete order items first to maintain foreign key integrity
+    await db.run('DELETE FROM order_items WHERE order_id = ?', [id]);
+    await db.run('DELETE FROM orders WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Delete order error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);

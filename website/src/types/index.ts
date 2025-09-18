@@ -43,6 +43,9 @@ export interface Product {
 }
 
 export interface SpecialOffer {
+  price: any;
+  price: any;
+  price: any;
   quality: number;
   products_count: ReactNode;
   end_time: string;
