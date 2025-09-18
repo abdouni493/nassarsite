@@ -5,6 +5,12 @@ import { open } from 'sqlite';
 import path from 'path';
 import fs from 'fs';
 import multer from "multer";
+// add right after imports
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -2666,12 +2672,30 @@ app.delete('/api/orders/:id', async (req, res) => {
 });
 
 // Serve React build folder
-app.use(express.static(path.join(__dirname, 'website', 'build')));
+app.use(express.static(path.join(__dirname, 'website', 'dist')));
+
+// Serve React index.html for any unknown route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'website', 'dist', 'index.html'));
+});
 
 // Catch-all route to send React index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'website', 'build', 'index.html'));
 });
+
+// Serve built React (Vite -> dist)
+const clientBuildPath = path.join(__dirname, 'website', 'dist'); // Vite produces 'dist'
+if (fs.existsSync(clientBuildPath)) {
+  app.use(express.static(clientBuildPath));
+  // catch-all for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+} else {
+  console.warn('⚠️ Client build not found at', clientBuildPath, '. Make sure you ran `npm run build` in website/ or set Render build command.');
+}
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
