@@ -4,14 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "cd website && npm install && npm run build",
-  "lint": "eslint .",
-  "preview": "vite preview",
-  "server": "node server.js",
-  "start": "node server.js"
-}
-,
+    "dev": "vite",
+    "build": "cd website && npm install && npm run build",
+    "preview": "vite preview",
+    "start": "npx serve -s website/dist"
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
@@ -64,6 +61,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.15.4",
+    "serve": "^14.2.5",
     "sonner": "^1.7.4",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
