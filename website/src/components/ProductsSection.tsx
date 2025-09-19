@@ -24,7 +24,9 @@ interface CategoryProduct {
   image: string;
 }
 
+// ✅ Environment variables
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+const ASSET_BASE = import.meta.env.VITE_ASSET_BASE || "";
 
 const ProductsSection: React.FC<ProductsSectionProps> = ({ category, onBack }) => {
   const { t, language } = useLanguage();
@@ -40,9 +42,9 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({ category, onBack }) =
   const loadProducts = async () => {
     try {
       setLoading(true);
-     const url = category
-  ? `${API_BASE}/categories/${category}/products`
-  : `${API_BASE}/products`;
+      const url = category
+        ? `${API_BASE}/categories/${category}/products`
+        : `${API_BASE}/products`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch products");
@@ -124,89 +126,94 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({ category, onBack }) =
         {/* Products Grid */}
         {!loading && filteredProducts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, index) => (
-              <div
-                key={product.id}
-                className="card-elevated group overflow-hidden fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {/* Product Image */}
-                <div className="relative h-48 bg-muted overflow-hidden">
-                 <img
-  src={
-    product.image
-      ? product.image.startsWith("http")
-        ? product.image
-        : `${API_BASE}${product.image}`
-      : "/placeholder.svg"
-  }
-  alt={language === "ar" ? product.nameAr : product.nameFr}
-/>
+            {filteredProducts.map((product, index) => {
+              const productName = language === "ar" ? product.nameAr : product.nameFr;
+              const productDesc = language === "ar"
+                ? product.descriptionAr
+                : product.descriptionFr;
 
+              // ✅ Use ASSET_BASE for images
+              const imageUrl = product.image
+                ? product.image.startsWith("http")
+                  ? product.image
+                  : `${ASSET_BASE}${product.image}`
+                : "/placeholder.svg";
 
-                  <Badge
-                    className={`absolute bottom-2 left-2 ${
-                      (product.quality ?? 0) > 0
-                        ? "bg-success text-success-foreground"
-                        : "bg-destructive text-destructive-foreground"
-                    }`}
-                  >
-                    {(product.quality ?? 0) > 0
-                      ? t("inStock") || "En stock"
-                      : t("outOfStock") || "Rupture de stock"}
-                  </Badge>
-                </div>
-
-                {/* Product Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">
-                    {language === "ar" ? product.nameAr : product.nameFr}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {language === "ar"
-                      ? product.descriptionAr
-                      : product.descriptionFr}
-                  </p>
-
-                  {/* Price & Quality */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold text-primary">
-                        {(product.selling_price ?? 0).toLocaleString()} دج
-                      </span>
-                      {product.originalPrice && (
-                        <span className="text-sm text-muted-foreground line-through">
-                          {product.originalPrice.toLocaleString()} دج
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={
-                            star <= (product.quality ?? 0)
-                              ? "h-3 w-3 text-yellow-400 fill-yellow-400"
-                              : "h-3 w-3 text-gray-300"
-                          }
-                        />
-                      ))}
-                    </div>
+              return (
+                <div
+                  key={product.id}
+                  className="card-elevated group overflow-hidden fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Product Image */}
+                  <div className="relative h-48 bg-muted overflow-hidden">
+                    <img
+                      src={imageUrl}
+                      alt={productName}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge
+                      className={`absolute bottom-2 left-2 ${
+                        (product.quality ?? 0) > 0
+                          ? "bg-success text-success-foreground"
+                          : "bg-destructive text-destructive-foreground"
+                      }`}
+                    >
+                      {(product.quality ?? 0) > 0
+                        ? t("inStock") || "En stock"
+                        : t("outOfStock") || "Rupture de stock"}
+                    </Badge>
                   </div>
 
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => handleAddToCart(product as unknown as Product)}
-                    disabled={(product.quality ?? 0) <= 0}
-                    className="w-full"
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    {t("addToCart") || "Ajouter"}
-                  </Button>
+                  {/* Product Info */}
+                  <div className="p-4">
+                    <h3 className="font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">
+                      {productName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {productDesc}
+                    </p>
+
+                    {/* Price & Quality */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-bold text-primary">
+                          {(product.selling_price ?? 0).toLocaleString()} دج
+                        </span>
+                        {product.originalPrice && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {product.originalPrice.toLocaleString()} دج
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={
+                              star <= (product.quality ?? 0)
+                                ? "h-3 w-3 text-yellow-400 fill-yellow-400"
+                                : "h-3 w-3 text-gray-300"
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleAddToCart(product as unknown as Product)}
+                      disabled={(product.quality ?? 0) <= 0}
+                      className="w-full"
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      {t("addToCart") || "Ajouter"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

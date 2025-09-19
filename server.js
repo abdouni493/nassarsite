@@ -15,7 +15,12 @@ const __dirname = dirname(__filename);
 const app = express();
 const upload = multer({ dest: "uploads/" });
 app.use(cors({
-  origin: ["http://localhost:8080", "http://localhost:8081"],
+  origin: [
+    "http://localhost:8080", 
+    "http://localhost:8081",
+    "https://nassarproject.onrender.com",
+    "https://nassarproject.onrender.com/login"
+  ],
   credentials: true
 }));
 
@@ -2670,24 +2675,33 @@ app.delete('/api/orders/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 // Serve React build folder
-app.use(express.static(path.join(__dirname, 'website', 'dist')));
+const clientBuildPath = path.join(process.cwd(), 'website', 'dist');
 
-
-// Serve built React (Vite -> dist)
-const clientBuildPath = path.join(__dirname, 'website', 'dist'); // Vite produces 'dist'
+// Check if the build directory exists
 if (fs.existsSync(clientBuildPath)) {
+  console.log('✅ Serving React build from:', clientBuildPath);
+  
+  // Serve static files from the build directory
   app.use(express.static(clientBuildPath));
-  // catch-all for client-side routing
+  
+  // Handle all other routes by serving index.html (for client-side routing)
   app.get('*', (req, res) => {
     res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 } else {
-  console.warn('⚠️ Client build not found at', clientBuildPath, '. Make sure you ran `npm run build` in website/ or set Render build command.');
+  console.warn('⚠️ Client build not found at', clientBuildPath);
+  console.warn('⚠️ Make sure you ran `npm run build` in the website/ directory');
+  
+  // Fallback: still serve API routes but show a warning for frontend
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      res.status(404).json({ message: 'API endpoint not found' });
+    } else {
+      res.status(500).send('Frontend build not found. Please build the React app.');
+    }
+  });
 }
-
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);

@@ -16,8 +16,10 @@ interface Category {
   description_ar?: string;
 }
 
-// ✅ Use environment variable for backend URL
+// ✅ API for data
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+// ✅ Asset base for images (uploads)
+const ASSET_BASE = import.meta.env.VITE_ASSET_BASE || "";
 
 const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => {
   const { t, language } = useLanguage();
@@ -76,8 +78,10 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => 
                 ? category.description_fr || "Description non fournie"
                 : category.description_ar || "لا يوجد وصف";
 
-            // ✅ Fix: use API_BASE instead of localhost
-            const imageUrl = category.image ? `${API_BASE}${category.image}` : "/placeholder.svg";
+            // ✅ Use ASSET_BASE for images (uploads)
+            const imageUrl = category.image
+              ? `${ASSET_BASE}${category.image}`
+              : "/placeholder.svg";
 
             return (
               <div
@@ -149,3 +153,4 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ onNavigate }) => 
 };
 
 export default CategoriesSection;
+

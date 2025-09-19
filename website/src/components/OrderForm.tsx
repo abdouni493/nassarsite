@@ -30,7 +30,8 @@ interface OrderFormData {
   paymentMethod: 'cod' | 'dahabia';
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";   // ✅ for API routes
+const ASSET_BASE = import.meta.env.VITE_ASSET_BASE || "";   // ✅ for images (/uploads)
 
 const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
   const { t, language } = useLanguage();
@@ -59,11 +60,12 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
       total: price * quantity,
       nameAr: item.nameAr,
       nameFr: item.nameFr,
-      imageUrl: item.image
-  ? item.image.startsWith('http')
+     imageUrl: item.image
+  ? item.image.startsWith("http")
     ? item.image
-    : `${API_BASE}${item.image}`
-  : '/placeholder.svg',
+    : `${ASSET_BASE}${item.image}`
+  : "/placeholder.svg",
+
     };
   });
 

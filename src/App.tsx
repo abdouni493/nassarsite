@@ -85,7 +85,7 @@ const App = () => {
   const [favicon, setFavicon] = useState("/favicon.ico");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/settings")
+fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
         if (data?.favicon_url) {
