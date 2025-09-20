@@ -1,34 +1,55 @@
-import express from 'express';
-import cors from 'cors';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import path from 'path';
-import fs from 'fs';
+import express from "express";
+import cors from "cors";
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
+import path from "path";
+import fs from "fs";
 import multer from "multer";
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
-app.use(cors({
-  origin: ["http://localhost:8080", "http://localhost:8081"],
-  credentials: true
-}));
 
-app.use(express.json({ limit: '10mb' })); // or higher if needed
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Ensure uploads/backups dirs exist
+const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+const BACKUPS_DIR = path.join(process.cwd(), "backups");
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 
+const upload = multer({ dest: UPLOADS_DIR });
 
-// ✅ Import backup route here
+// --- CORS config ---
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim())
+  : ["http://localhost:8080", "http://localhost:8081"];
+
+const corsOptions =
+  process.env.ALLOW_ALL === "true"
+    ? { origin: true, credentials: true }
+    : { origin: allowedOrigins, credentials: true };
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// --- DB path (used by initDb and backup routes) ---
+const DB_PATH = process.env.SQLITE_PATH
+  ? path.isAbsolute(process.env.SQLITE_PATH)
+    ? process.env.SQLITE_PATH
+    : path.join(process.cwd(), process.env.SQLITE_PATH)
+  : path.join(process.cwd(), "database.sqlite");
+
+// --- Backup import route ---
 app.post("/api/backup/import", upload.single("backup"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    const dbPath = path.join(process.cwd(), "database.sqlite");
-    fs.copyFileSync(req.file.path, dbPath);
+    fs.copyFileSync(req.file.path, DB_PATH);
     fs.unlinkSync(req.file.path);
 
-    res.json({ message: "Backup imported successfully. Please restart the server." });
+    res.json({
+      message: "✅ Backup imported successfully. Please restart the server.",
+    });
   } catch (err) {
     console.error("❌ Backup import error:", err);
     res.status(500).json({ message: "Failed to import backup" });
@@ -404,16 +425,21 @@ await ensureColumn('special_offer_products', 'quality', 'INTEGER DEFAULT 5');
 // Init database and start the server
 (async () => {
   try {
-    const dbDir = process.cwd();
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir);
-    }
-    const dbPath = path.join(dbDir, 'database.sqlite');
-    
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
-    });
+   // determine DB path: allow override via SQLITE_PATH (relative to repo root) or use database.sqlite in repo root
+const dbDir = process.cwd();
+const DB_PATH = process.env.SQLITE_PATH
+  ? path.isAbsolute(process.env.SQLITE_PATH) ? process.env.SQLITE_PATH : path.join(process.cwd(), process.env.SQLITE_PATH)
+  : path.join(dbDir, 'database.sqlite');
+
+// Ensure parent folder for DB exists (handles if SQLITE_PATH uses a subfolder)
+const dbParent = path.dirname(DB_PATH);
+if (!fs.existsSync(dbParent)) fs.mkdirSync(dbParent, { recursive: true });
+
+db = await open({
+  filename: DB_PATH,
+  driver: sqlite3.Database,
+});
+
     
     await initDb();
     
@@ -2664,6 +2690,18 @@ app.delete('/api/orders/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Serve static SPA build if exists (production)
+const DIST_DIR = path.join(process.cwd(), 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+
+  // Return index.html for any other GET request (client-side routing)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);

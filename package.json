@@ -4,15 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "server": "node server.js",
-    "website": "cd website && vite",
-    "start": "npm-run-all --parallel server dev website"
-  },
+  "dev": "vite",
+  "build": "vite build && cd website && vite build",
+  "server": "node server.js",
+  "website": "cd website && vite",
+  "start:prod": "node server.js",
+  "start": "npm run start:prod"
+},
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
