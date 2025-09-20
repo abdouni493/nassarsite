@@ -3,14 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=8"
+  },
   "scripts": {
-  "dev": "vite",
-  "build": "vite build && cd website && vite build",
-  "server": "node server.js",
-  "website": "cd website && vite",
-  "start:prod": "node server.js",
-  "start": "npm run start:prod"
-},
+    "dev": "vite",
+    "build": "vite build && cd website && vite build",
+    "server": "node server.js",
+    "website": "cd website && vite",
+    "start:prod": "node server.js",
+    "start": "npm run start:prod"
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
