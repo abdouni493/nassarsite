@@ -6,22 +6,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { Contact } from '@/types';
-import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { useToast } from "@/hooks/use-toast";
 
+import { cn } from '@/lib/utils';
 // Helper function to handle API calls
-const API_BASE_URL = 'http://localhost:5000';
+import { API_BASE } from "@/config";
 
 const apiClient = {
   get: async (path: string) => {
-    const response = await fetch(`${API_BASE_URL}${path}`);
+    const response = await fetch(`${API_BASE}${path}`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
     return response.json();
   },
   post: async (path: string, data: any) => {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ const ContactsManagement = () => {
   const [contact, setContact] = useState<Contact>({} as Contact);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { t } = useTranslation();
-
+const { toast } = useToast();
   // Fetch contact data from the backend on component mount
   useEffect(() => {
     const fetchContact = async () => {

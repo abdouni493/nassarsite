@@ -55,7 +55,9 @@ const allCategories: Record<string, { fr: string; ar: string }> = {
   safety_ppe: { fr: "Sécurité & EPI", ar: "معدات الحماية الشخصية" },
 };
 
-const API = "http://localhost:5000/api/products";
+// Use environment variable if available, otherwise fallback to local
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API = `${API_BASE}/products`;
 
 export default function Inventory() {
   const { toast } = useToast();

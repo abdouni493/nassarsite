@@ -23,6 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { ArrowRight } from 'lucide-react';
+import { API_BASE } from "@/config";  // ✅ import your config
 
 // Component for displaying key statistics
 const StatCard = ({ 
@@ -137,27 +138,28 @@ export default function Dashboard() {
   const [hasError, setHasError] = useState(false);
 
   const fetchData = async () => {
-    setIsLoading(true);
-    setHasError(false);
-    try {
-      const response = await fetch("http://localhost:5000/api/dashboard/stats", {
-        headers: { "x-user-email": user?.email || "" }
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch dashboard data");
-      }
-      const data = await response.json();
-      setStats(data); // Set the entire data object
-      setRecentActivity(data.recentActivity);
-    } catch (err) {
-      console.error("❌ Failed to fetch dashboard data:", err);
-      setStats(null);
-      setRecentActivity([]);
-      setHasError(true);
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  setHasError(false);
+  try {
+    const response = await fetch(`${API_BASE}/dashboard/stats`, {
+      headers: { "x-user-email": user?.email || "" }
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch dashboard data");
     }
-  };
+    const data = await response.json();
+    setStats(data);
+    setRecentActivity(data.recentActivity);
+  } catch (err) {
+    console.error("❌ Failed to fetch dashboard data:", err);
+    setStats(null);
+    setRecentActivity([]);
+    setHasError(true);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   useEffect(() => {
     if (user) {
