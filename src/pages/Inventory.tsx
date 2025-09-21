@@ -57,7 +57,7 @@ const allCategories: Record<string, { fr: string; ar: string }> = {
 
 const API = "/api/products";
 
-export default function Inventory() {s
+export default function Inventory() {
   const { toast } = useToast();
   const { language, isRTL } = useLanguage();
 
