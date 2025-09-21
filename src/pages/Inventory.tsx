@@ -55,9 +55,9 @@ const allCategories: Record<string, { fr: string; ar: string }> = {
   safety_ppe: { fr: "Sécurité & EPI", ar: "معدات الحماية الشخصية" },
 };
 
-const API = "http://localhost:5000/api/products";
+const API = "/api/products";
 
-export default function Inventory() {
+export default function Inventory() {s
   const { toast } = useToast();
   const { language, isRTL } = useLanguage();
 
