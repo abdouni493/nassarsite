@@ -348,7 +348,7 @@ const fetchUserInfo = async () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="fr">🇫🇷 Français</SelectItem>
-                    <SelectItem value="ar">🇲🇦 العربية</SelectItem>
+                    <SelectItem value="ar">Ar العربية</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
