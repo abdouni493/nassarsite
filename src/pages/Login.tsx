@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";  // ✅ Import navigation hook
-import { API_BASE } from "@/config";
 
 interface LoginProps {
   onLogin: (user: any) => void;
@@ -37,12 +36,11 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
-const response = await fetch(`${API_BASE}/login`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ login: credentials.login, password: credentials.password }),
-});
-
+const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ login: credentials.login, password: credentials.password }),
+      });
 
       if (response.ok) {
   const data = await response.json();

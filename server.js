@@ -8,7 +8,7 @@ import multer from "multer";
 
 const app = express();
 
-// --- Ensure uploads/backups directories exist ---
+// Ensure uploads/backups dirs exist
 const UPLOADS_DIR = path.join(process.cwd(), "uploads");
 const BACKUPS_DIR = path.join(process.cwd(), "backups");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -16,57 +16,32 @@ if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 
 const upload = multer({ dest: UPLOADS_DIR });
 
-// --- CORS configuration ---
+// --- CORS config ---
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim())
-  : [
-      "http://localhost:8080",
-      "http://localhost:8081",
-      "https://nassarwebapp.up.railway.app", // deployed frontend
-    ];
+  : ["http://localhost:8080", "http://localhost:8081"];
 
 const corsOptions =
   process.env.ALLOW_ALL === "true"
     ? { origin: true, credentials: true }
-    : {
-        origin: function (origin, callback) {
-          if (!origin) return callback(null, true); // allow server-to-server/Postman
-          if (allowedOrigins.includes(origin)) callback(null, true);
-          else callback(new Error("Not allowed by CORS: " + origin));
-        },
-        credentials: true,
-      };
+    : { origin: allowedOrigins, credentials: true };
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// --- Database path ---
+// --- DB path (used by initDb and backup routes) ---
 const DB_PATH = process.env.SQLITE_PATH
   ? path.isAbsolute(process.env.SQLITE_PATH)
     ? process.env.SQLITE_PATH
     : path.join(process.cwd(), process.env.SQLITE_PATH)
   : path.join(process.cwd(), "database.sqlite");
 
-// --- SQLite DB connection ---
-let db;
-(async () => {
-  db = await open({
-    filename: DB_PATH,
-    driver: sqlite3.Database,
-  });
-  console.log("✅ SQLite database connected at", DB_PATH);
-})();
-
 // --- Backup import route ---
 app.post("/api/backup/import", upload.single("backup"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-
-    // Backup current DB before overwriting
-    if (fs.existsSync(DB_PATH)) {
-      const backupName = `backup_${Date.now()}.sqlite`;
-      fs.copyFileSync(DB_PATH, path.join(BACKUPS_DIR, backupName));
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
     }
 
     fs.copyFileSync(req.file.path, DB_PATH);
@@ -81,10 +56,8 @@ app.post("/api/backup/import", upload.single("backup"), async (req, res) => {
   }
 });
 
-// --- Serve uploads publicly ---
-app.use("/uploads", express.static(UPLOADS_DIR));
 
-export default app;
+let db;
 
 // Helper to add missing columns safely
 async function ensureColumn(table, name, ddl, fallbackValue = null) {

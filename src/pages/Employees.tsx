@@ -50,7 +50,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { API_BASE } from "@/config";  // ✅ import your config
 
 interface Employee {
   id: number;
@@ -114,8 +113,7 @@ export default function Employees() {
   const fetchEmployees = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/employees`);
-
+      const response = await axios.get('http://localhost:5000/api/employees');
       setEmployees(response.data);
       setError(null);
     } catch (err) {
@@ -128,8 +126,7 @@ export default function Employees() {
 
   const fetchPaymentHistory = async (employeeId: number) => {
     try {
-      const response = await axios.get(`${API_BASE}/employees/${employeeId}/payments`);
-
+      const response = await axios.get(`http://localhost:5000/api/employees/${employeeId}/payments`);
       setPaymentHistory(response.data);
       setError(null);
     } catch (err) {
@@ -217,8 +214,7 @@ export default function Employees() {
   const handleDeleteEmployee = async (id: number) => {
     if (window.confirm(language === 'ar' ? 'هل أنت متأكد من أنك تريد حذف هذا الموظف؟' : 'Are you sure you want to delete this employee?')) {
       try {
-        await axios.delete(`${API_BASE}/employees/${id}`);
-
+        await axios.delete(`http://localhost:5000/api/employees/${id}`);
         fetchEmployees();
       } catch (err) {
         setError(language === 'ar' ? 'فشل في حذف الموظف.' : 'Failed to delete employee.');
@@ -234,18 +230,15 @@ export default function Employees() {
           ...formData,
           hasAccount: formData.username && formData.password ? true : false
         };
-        await axios.post(`${API_BASE}/employees`, newEmployeeData);
-
+        await axios.post('http://localhost:5000/api/employees', newEmployeeData);
       } else if (dialogMode === 'edit' && selectedEmployee) {
         const updatedEmployeeData = {
           ...formData,
           hasAccount: formData.username && formData.password ? true : false
         };
-        await axios.put(`${API_BASE}/employees/${selectedEmployee.id}`, updatedEmployeeData);
-
+        await axios.put(`http://localhost:5000/api/employees/${selectedEmployee.id}`, updatedEmployeeData);
       } else if (dialogMode === 'payment' && selectedEmployee) {
-        await axios.post(`${API_BASE}/employees/${selectedEmployee.id}/pay`, paymentData);
-
+        await axios.post(`http://localhost:5000/api/employees/${selectedEmployee.id}/pay`, paymentData);
       }
       setIsDialogOpen(false);
       fetchEmployees();

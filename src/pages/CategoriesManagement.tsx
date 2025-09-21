@@ -11,12 +11,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useLanguage } from "@/contexts/LanguageContext"; // ✅ fix
+import { useTranslation } from "@/contexts/LanguageContext";
 import ProductsView from "./ProductsView";
-import { API_BASE } from "@/config"; // central config
 
 // ✅ Use shared Category type
 import { Category } from "@/types";
+
 interface FormData {
   nameFr: string;
   nameAr: string;
@@ -25,6 +25,7 @@ interface FormData {
 }
 
 // ⚡ If you have a proxy in vite.config.ts, you can replace with ""
+const API_BASE = "http://localhost:5000";
 
 const CategoriesManagement = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -41,7 +42,7 @@ const CategoriesManagement = () => {
     preview: "",
   });
 
-const { t } = useLanguage();
+  const { t } = useTranslation();
 
   // Fetch categories on mount
   useEffect(() => {
