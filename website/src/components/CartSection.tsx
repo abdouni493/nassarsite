@@ -203,7 +203,7 @@ const CartSection: React.FC<CartSectionProps> = ({ onNavigate }) => {
                     className="w-full"
                   >
                     {t('checkout')}
-                  </Button>
+                  </Button> 
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('categories')}
