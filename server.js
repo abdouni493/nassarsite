@@ -5,6 +5,7 @@ import { open } from "sqlite";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
+import { downloadDb, uploadDb } from "./supabase-sqlite-sync.js";
 
 const app = express();
 
@@ -37,6 +38,8 @@ const DB_PATH = process.env.SQLITE_PATH
     : path.join(process.cwd(), process.env.SQLITE_PATH)
   : path.join(process.cwd(), "database.sqlite");
 
+let db; // will be set in startup
+
 // --- Backup import route ---
 app.post("/api/backup/import", upload.single("backup"), async (req, res) => {
   try {
@@ -56,10 +59,7 @@ app.post("/api/backup/import", upload.single("backup"), async (req, res) => {
   }
 });
 
-
-let db;
-
-// Helper to add missing columns safely
+// --- Helper to add missing columns safely ---
 async function ensureColumn(table, name, ddl, fallbackValue = null) {
   try {
     const cols = await db.all(`PRAGMA table_info(${table});`);
@@ -76,6 +76,26 @@ async function ensureColumn(table, name, ddl, fallbackValue = null) {
     console.error(`❌ Failed to add column '${name}' to table '${table}':`, err);
   }
 }
+
+// --- Startup: sync DB from Supabase and open SQLite ---
+export async function initDbConnection() {
+  try {
+    // 1. Sync DB from Supabase
+    await downloadDb();
+
+    // 2. Open local SQLite
+    db = await open({
+      filename: DB_PATH,
+      driver: sqlite3.Database,
+    });
+
+    console.log("✅ Database opened at", DB_PATH);
+  } catch (err) {
+    console.error("❌ Failed to init database:", err);
+    process.exit(1);
+  }
+}
+
 
 // Function to initialize the database and tables
 async function initDb() {
