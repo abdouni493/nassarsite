@@ -1,38 +1,52 @@
-# fly.toml app configuration file for nassar-app
-#
-# Updated to use modern Heroku CNB builder for Node.js
-# See https://fly.io/docs/reference/configuration/ for more info
-
+# fly.toml for nassar-app
 app = "nassar-app"
 primary_region = "sin"
 
+# Build using your Dockerfile
 [build]
   dockerfile = "./Dockerfile"
 
-
+# Environment variables
 [env]
   NODE_ENV = "production"
   PORT = "8080"
 
+# Virtual machine configuration
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+# Attach Fly volume for persistent storage
+[mounts]
+  source = "data"
+  destination = "/app/data"
+
+# Services exposed
 [[services]]
   protocol = "tcp"
   internal_port = 8080
   processes = ["app"]
 
+  # HTTP port
   [[services.ports]]
     port = 80
     handlers = ["http"]
 
+  # HTTPS port
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
 
+  # TCP health checks
   [[services.tcp_checks]]
     interval = "15s"
     timeout = "2s"
     grace_period = "1m0s"
+    restart_limit = 0  # unlimited retries
 
-[[vm]]
-  memory = "1gb"
-  cpu_kind = "shared"
-  cpus = 1
+# Rolling deployment strategy
+[deploy]
+  strategy = "rolling"
+  max_parallel = 1     # update 1 machine at a time
+  min_healthy = 1      # require at least 1 healthy machine

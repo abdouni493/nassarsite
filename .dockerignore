@@ -1,0 +1,18 @@
+# Node dependencies (reinstalled in Docker)
+node_modules
+
+# Build directories
+dist
+.vite
+.cache
+
+# Local environment files
+.env
+.env.production
+
+# Database and uploads (use Fly volumes instead)
+database.sqlite
+uploads
+
+# Logs
+*.log
