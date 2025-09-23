@@ -7,8 +7,8 @@ app = "nassar-app"
 primary_region = "sin"
 
 [build]
-  # Use supported Heroku Cloud Native Buildpack
-  builder = "heroku/buildpacks:22"
+  dockerfile = "./Dockerfile"
+
 
 [env]
   NODE_ENV = "production"
