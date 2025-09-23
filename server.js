@@ -12,6 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express(); // ✅ define app first
+const PORT = process.env.PORT || 8080;
 
 // Ensure uploads/backups dirs exist
 const UPLOADS_DIR = path.join(process.cwd(), "uploads");
