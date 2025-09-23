@@ -11,9 +11,7 @@
     "preview": "vite preview",
     "server": "node server.js",
     "website": "cd website && vite",
-    "start": "npm-run-all --parallel server dev website",
-    "sync:upload": "node supabase-sqlite-sync.js upload",
-    "sync:download": "node supabase-sqlite-sync.js download"
+    "start": "npm-run-all --parallel server dev website"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -44,7 +42,6 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
-    "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.83.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
@@ -53,7 +50,6 @@
     "cmdk": "^1.1.1",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
-    "dotenv": "^17.2.2",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "framer-motion": "^12.23.12",
@@ -62,7 +58,6 @@
     "lucide-react": "^0.462.0",
     "multer": "^2.0.2",
     "next-themes": "^0.3.0",
-    "node-fetch": "^3.3.2",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
